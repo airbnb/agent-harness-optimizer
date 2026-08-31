@@ -1,0 +1,49 @@
+# BFCL PRISM inner model ablation template
+# Paper: "Beyond Prompts: Measuring and Optimizing LLM Tool-Agent Harnesses"
+# Table 4: Effect of inner (scored) model on PRISM optimization outcomes
+#
+# Run for each inner model by changing --inner-model and --output-dir:
+#   python -m agent_harness_optimizer.cli --benchmark bfcl --optimizer prism \
+#     --inner-model openai/gpt-4o \
+#     --outer-model <outer_model> \
+#     --output-dir runs/bfcl-prism-inner-gpt4o-s0 \
+#     --split-seed 0 \
+#     --train-cases 100 --holdout-cases 100 \
+#     --generations 10 --mutations-per-gen 3 \
+#     --wall-time-s 300 --max-steps 100
+
+benchmark: bfcl
+optimizer: prism
+
+# ABLATION VARIABLE: change inner_model across runs
+# Paper inner models tested:
+#   openai/gpt-5.4-mini           (default / cheapest)
+#   openai/gpt-4.1                (GPT-4.1)
+#   openai/gpt-4o                 (GPT-4o)
+#   anthropic/claude-haiku-4-5    (Haiku 4.5)
+#   openai/gpt-4.5-nano           (GPT-5-Nano)
+#   vertex_ai/gemini-2.5-flash    (Gemini 2.5 Flash)
+#   (additional models available via Bedrock, Azure, or Vertex AI)
+inner_model: "openai/gpt-4o"  # CHANGE THIS per ablation run
+
+# Outer model: paper used Claude Sonnet for inner ablations (cheaper than Opus)
+outer_model: "anthropic/claude-sonnet-4-6"
+
+wall_time_s: 300
+max_steps: 100
+max_tokens: 500000
+
+generations: 10
+mutations_per_gen: 3
+train_cases: 100
+holdout_cases: 100
+seed: 42
+
+# Paper ran inner ablations at split_seed=0 only (single fold)
+split_seed: 0
+
+outer_max_turns: 300
+acceptance: holdout_pass_rate
+
+repeat_id: 0
+search_seed: 0

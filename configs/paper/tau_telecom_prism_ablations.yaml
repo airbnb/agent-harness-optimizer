@@ -1,0 +1,67 @@
+# Tau-Bench Telecom PRISM §6.3 component ablations configuration
+# Paper: "Beyond Prompts: Measuring and Optimizing LLM Tool-Agent Harnesses"
+# Identical protocol and budget as the corresponding main experiment (tau_telecom_prism_main.yaml).
+# Requires: pip install "agent-harness-optimizer[tau]"  AND tau2-bench installed
+#
+# Each ablation reverts exactly one Table 1 attribute of PRISM.
+# Run once per ablation flag (change the flag and --output-dir):
+#   no_route      — clusters computed but not routed to surface slots (PRISM-NoRoute)
+#   no_gate       — gate split consulted at final acceptance only, like
+#                   GEPA/MIPROv2 (PRISM-NoGate)
+#   no_matrix     — no cross-iteration failure tracking (PRISM-NoMatrix)
+#   no_constraint — free-form middleware edits, like BH-MW (PRISM-NoConstraint)
+#   no_crossover  — complementary children never merged (PRISM-NoCrossover)
+# Frontier retention is ablated separately: --prism-population-cap 1 (single
+# incumbent) or 10, under --acceptance holdout_pareto (where the cap binds).
+#
+# Run with:
+#   python -m agent_harness_optimizer.cli --benchmark tau-telecom --optimizer prism \
+#     --prism-no-route \
+#     --inner-model <inner_model> --outer-model <outer_model> \
+#     --output-dir runs/tau-telecom-prism-noroute-s0 \
+#     --split-seed 0 \
+#     --train-cases 20 --holdout-cases 20 \
+#     --generations 10 --mutations-per-gen 3 \
+#     --wall-time-s 600 --max-steps 200 \
+#     --scorecard-trials 4
+
+benchmark: tau-telecom
+optimizer: prism
+
+# ABLATION FLAG (pick exactly one per run):
+#   --prism-no-route | --prism-no-gate | --prism-no-matrix |
+#   --prism-no-constraint | --prism-no-crossover
+ablation_flag: "--prism-no-route"  # CHANGE THIS per ablation run
+
+inner_model: "openai/gpt-5.4-mini"
+outer_model: "anthropic/claude-opus-4-7"
+
+# Tau-bench requires longer budgets — the tau2 orchestrator counts every
+# message exchange (including tool calls) as one step.
+wall_time_s: 600
+max_steps: 200
+max_tokens: 100000
+
+generations: 10
+mutations_per_gen: 3
+# Tau retail: 114-task curated base pool, split into train/holdout/scorecard
+train_cases: 20
+holdout_cases: 20
+seed: 42
+
+split_seed: 0  # tau stratified split seed
+
+# pass^k evaluation: paper used k=4 for tau benchmarks
+scorecard_trials: 4
+
+outer_max_turns: 300
+acceptance: holdout_pass_rate
+
+repeat_id: 0
+search_seed: 0
+
+# Notes:
+# - Same protocol, budget, and splits as tau_telecom_prism_main.yaml — only
+#   prism_ablation differs.
+# - tau2-bench data dir is configured via TAU2_DATA_DIR env var, or --tau-data-dir
+# - search_seed / repeat_id are LABELS only — they do not set LLM sampling seeds.

@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install dependencies
+        run: uv pip install -e ".[dev]" --system
+
+      - name: Lint
+        run: |
+          ruff check agent_harness_optimizer/ scripts/
+          ruff format --check agent_harness_optimizer/ scripts/
+
+      - name: Run tests with coverage
+        # The floor covers the offline-testable core (framework, PRISM/BH
+        # loops, splits, acceptance); benchmark adapters and LLM wrappers
+        # need external services and are exercised by the mock benchmark.
+        run: python -m pytest tests/ -v --cov=agent_harness_optimizer --cov-report=term --cov-fail-under=20

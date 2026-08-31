@@ -1,0 +1,98 @@
+[project]
+name = "agent-harness-optimizer"
+version = "1.0.0"
+description = "AHO: iterative agent harness optimizer — evolves system prompts and middleware via PRISM, BetterHarness, or MIPROv2 against BFCL, tau-bench, or custom benchmarks."
+readme = "README.md"
+authors = [{ name = "Mia Zhao", email = "mia.zhao@airbnb.com" }]
+license = { text = "Apache-2.0" }
+requires-python = ">=3.12"
+keywords = ["agents", "ai", "evals", "optimization", "llm", "langchain", "prompt-engineering"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    # Agent framework (https://github.com/langchain-ai/deepagents)
+    "deepagents>=0.5.0",
+    # LangChain stack
+    "langchain>=1.2.0",
+    "langchain-core>=0.3.0",
+    "langchain-anthropic>=1.4.0",
+    "langchain-openai>=1.1.0",
+    "langgraph>=0.4.0",
+    # Multi-provider LLM routing (bedrock, azure, openai, anthropic, …)
+    "litellm>=1.60.0",
+    "langchain-litellm>=0.6.0",
+    # BFCL API simulation classes
+    "mpmath>=1.3.0",
+    "rank-bm25>=0.2.2",
+    "overrides>=7.7.0",
+    "numpy>=1.26.0",
+    "boto3>=1.34.0",
+]
+
+[project.optional-dependencies]
+tau = [
+    # τ²-bench from Sierra Research at the paper-pinned commit (0.2.1.dev0).
+    # NOT the unrelated PyPI package named "tau2" (a chemistry magnetic-relaxation
+    # library) — installing that silently breaks tau benchmarks (no tau2.run module).
+    "tau2 @ git+https://github.com/sierra-research/tau2-bench.git@337326e",
+]
+
+miprov2 = [
+    "optuna>=3.6.0",
+    "dspy-ai>=2.6.0",
+]
+gepa = [
+    "gepa>=0.1.0",
+]
+bfcl-memory = [
+    # Required only for MemoryAPI_vector BFCL cases (faiss + sentence-transformers)
+    "sentence-transformers>=3.0.0",
+    "faiss-cpu>=1.8.0",
+]
+bfcl-web = [
+    # Required only for WebSearchAPI BFCL cases
+    "google-search-results>=2.4.2",
+    "html2text>=2024.2.26",
+    "beautifulsoup4>=4.12.0",
+]
+dev = [
+    "pytest>=9.0.0",
+    "pytest-asyncio>=1.2.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.8.0",
+]
+
+[project.scripts]
+agent-harness-optimizer = "agent_harness_optimizer.cli:main"
+
+[project.urls]
+Repository = "https://github.com/airbnb/agent-harness-optimizer"
+
+[build-system]
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agent_harness_optimizer*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+# E501 is left to the formatter: the remaining long lines are deliberate
+# (prompt templates and log strings that must not be rewrapped).
+ignore = ["E501"]

@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "agent-harness-optimizer"
+authors:
+  - family-names: Zhao
+    given-names: Cen
+  - family-names: Ruan
+    given-names: Haibo
+  - family-names: Chen
+    given-names: Wenjie
+  - family-names: Tu
+    given-names: Pei-fen
+  - family-names: Abbasi
+    given-names: Usman
+  - family-names: Hesch
+    given-names: Joel
+url: "https://github.com/airbnb/agent-harness-optimizer"
+repository-code: "https://github.com/airbnb/agent-harness-optimizer"
+license: Apache-2.0
+preferred-citation:
+  type: conference-paper
+  title: "Beyond Prompts: Measuring and Optimizing LLM Tool-Agent Harnesses"
+  authors:
+    - family-names: Zhao
+      given-names: Cen
+    - family-names: Ruan
+      given-names: Haibo
+    - family-names: Chen
+      given-names: Wenjie
+    - family-names: Tu
+      given-names: Pei-fen
+    - family-names: Abbasi
+      given-names: Usman
+    - family-names: Hesch
+      given-names: Joel
+  collection-title: "Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing (EMNLP)"
+  collection-type: proceedings
+  publisher:
+    name: "Association for Computational Linguistics"
+  year: 2026

@@ -1,0 +1,54 @@
+# Tau-Bench Retail GEPA-MW (pattern-guided middleware) configuration
+# Paper: "Beyond Prompts: Measuring and Optimizing LLM Tool-Agent Harnesses"
+# Identical protocol and budget as the corresponding main experiment. GEPA-MW optimizes a pattern-guided middleware
+# component (shared surface: agent_harness_optimizer/optimizers/middleware_surface.py)
+# alongside the prompt (Table 2 arm).
+# Requires: pip install gepa   (GEPA library)  AND tau2-bench installed
+#
+# Run with:
+#   python -m agent_harness_optimizer.cli --benchmark tau-retail --optimizer gepa \
+#     --gepa-middleware \
+#     --inner-model <inner_model> --outer-model <outer_model> \
+#     --output-dir runs/tau-retail-gepa-mw-s0 \
+#     --split-seed 0 \
+#     --train-cases 20 --holdout-cases 20 \
+#     --gepa-max-metric-calls 200 \
+#     --wall-time-s 600 --max-steps 200 \
+#     --scorecard-trials 4
+
+benchmark: tau-retail
+optimizer: gepa
+
+# GEPA-MW arm: pattern-guided middleware surface in the GEPA loop
+gepa_middleware: true
+
+inner_model: "openai/gpt-5.4-mini"
+outer_model: "anthropic/claude-opus-4-7"
+
+# Tau-bench budgets (same as tau_retail_prism_main.yaml)
+wall_time_s: 600
+max_steps: 200
+max_tokens: 100000
+
+# GEPA hyperparameters (paper settings)
+gepa_max_metric_calls: 160
+gepa_reflection_minibatch_size: 20
+
+# Tau retail: 114-task curated base pool, split into train/holdout/scorecard
+train_cases: 20
+holdout_cases: 20
+seed: 42
+
+split_seed: 0  # tau stratified split seed
+
+# pass^k evaluation: paper used k=4 for tau benchmarks
+scorecard_trials: 4
+
+repeat_id: 0
+search_seed: 0
+
+# Notes:
+# - Same tau-retail protocol (splits, budgets, pass^4) as tau_retail_prism_main.yaml;
+#   GEPA hyperparameters follow bfcl_gepa_main.yaml.
+# - tau2-bench data dir is configured via TAU2_DATA_DIR env var, or --tau-data-dir
+# - search_seed / repeat_id are LABELS only — they do not set LLM sampling seeds.

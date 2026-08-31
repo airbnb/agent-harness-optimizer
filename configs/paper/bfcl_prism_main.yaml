@@ -1,0 +1,57 @@
+# BFCL PRISM main experiment configuration
+# Paper: "Beyond Prompts: Measuring and Optimizing LLM Tool-Agent Harnesses"
+# Run with:
+#   python -m agent_harness_optimizer.cli --benchmark bfcl --optimizer prism \
+#     --inner-model <inner_model> --outer-model <outer_model> \
+#     --output-dir runs/bfcl-prism-s0 \
+#     --split-seed 0 \
+#     --train-cases 100 --holdout-cases 100 \
+#     --generations 10 --mutations-per-gen 3 \
+#     --wall-time-s 300 --max-steps 100 \
+#     --outer-max-turns 300
+
+benchmark: bfcl
+optimizer: prism
+
+# Model placeholders — replace with your provider's model strings (litellm format)
+# Paper used: inner=openai/gpt-5.4-mini, outer=anthropic/claude-opus-4-7
+inner_model: "openai/gpt-5.4-mini"      # or anthropic/claude-haiku-4-5, etc.
+outer_model: "anthropic/claude-opus-4-7" # or openai/gpt-4.1, etc.
+
+# Evaluation budget per case
+wall_time_s: 300
+max_steps: 100
+max_tokens: 500000
+
+# PRISM hyperparameters (paper settings)
+generations: 10
+mutations_per_gen: 3
+train_cases: 100
+holdout_cases: 100
+seed: 42
+
+# Cross-validation fold (0-3 for 4-fold CV; run all 4 seeds to reproduce paper results)
+split_seed: 0  # change to 1, 2, 3 for other folds
+
+# Outer agent settings
+outer_max_turns: 300
+
+# Acceptance criterion
+acceptance: holdout_pass_rate  # options: holdout_pass_rate, holdout_pareto, combined_pass_rate
+
+# Repeat settings (run with repeat_id=0,1,2 for 3 repeats per seed)
+repeat_id: 0
+search_seed: 0  # increment per repeat
+
+# Notes for paper reproduction:
+# - Paper ran seeds 0-3, repeat_id 0-2, for all optimizers
+# - All optimizers in a fold share --shared-baseline-dir for fair comparison
+# - BFCL data files must be present in data/bfcl/ (download from BFCL v4 release)
+# - Recommended: score baseline first with agent_harness_optimizer.score_baseline, then run all optimizers
+#   pointing to --shared-baseline-dir <baseline_dir>
+# - Scorecard split: BFCL uses 600 out-of-sample cases per fold (4-fold CV over ~800 tasks)
+# - search_seed / repeat_id are LABELS only — they do not set LLM sampling seeds.
+#   Multiple repeats with the same config will produce statistically similar but
+#   not identical outputs. Reproducibility means same protocol, not same outputs.
+# - Token cost estimates for runs before 2026-05-14 use imputed per-call reference rates
+#   (exact tracking was added after that date); rollout counts are exact for all runs.

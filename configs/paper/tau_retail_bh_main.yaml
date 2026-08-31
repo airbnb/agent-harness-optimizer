@@ -1,0 +1,35 @@
+# Tau-Bench Retail BetterHarness main experiment configuration
+# Paper: "Beyond Prompts: Measuring and Optimizing LLM Tool-Agent Harnesses"
+# Table 2 arms: BH-MW (as published, this file) and BH-PO (add --bh-prompt-only).
+# Requires: pip install "agent-harness-optimizer[tau]"  AND tau2-bench installed
+#
+# Run with:
+#   python -m agent_harness_optimizer.cli --benchmark tau-retail --optimizer better-harness \
+#     --inner-model <inner_model> --outer-model <outer_model> \
+#     --output-dir runs/tau-retail-bh-s0 \
+#     --split-seed 0 \
+#     --train-cases 20 --holdout-cases 20 \
+#     --max-iterations 10 \
+#     --wall-time-s 600 --max-steps 200 \
+#     --scorecard-trials 4
+benchmark: tau-retail
+optimizer: better-harness
+inner_model: "openai/gpt-5.4-mini"
+outer_model: "anthropic/claude-opus-4-7"
+wall_time_s: 600
+max_steps: 200
+max_tokens: 100000
+max_iterations: 10
+train_cases: 20
+holdout_cases: 20
+seed: 42
+split_seed: 0  # tau stratified split seed
+scorecard_trials: 4
+outer_max_turns: 300
+acceptance: holdout_pass_rate
+repeat_id: 0
+search_seed: 0
+# Notes:
+# - BH-PO variant: identical config with --bh-prompt-only.
+# - Same tau-retail protocol (splits, budgets, pass^4) as tau_retail_prism_main.yaml.
+# - Scorecard split: 114 base tasks − 20 train − 20 holdout = 74 scorecard cases

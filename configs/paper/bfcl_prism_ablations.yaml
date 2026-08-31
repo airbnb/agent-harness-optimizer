@@ -1,0 +1,64 @@
+# BFCL PRISM §6.3 component ablations configuration
+# Paper: "Beyond Prompts: Measuring and Optimizing LLM Tool-Agent Harnesses"
+# Identical protocol and budget as the corresponding main experiment (bfcl_prism_main.yaml). Cross-task replication
+# grid for the §6.3 ablations from the discussion period.
+#
+# Each ablation reverts exactly one Table 1 attribute of PRISM.
+# Run once per ablation flag (change the flag and --output-dir):
+#   no_route      — clusters computed but not routed to surface slots (PRISM-NoRoute)
+#   no_gate       — gate split consulted at final acceptance only, like
+#                   GEPA/MIPROv2 (PRISM-NoGate)
+#   no_matrix     — no cross-iteration failure tracking (PRISM-NoMatrix)
+#   no_constraint — free-form middleware edits, like BH-MW (PRISM-NoConstraint)
+#   no_crossover  — complementary children never merged (PRISM-NoCrossover)
+# Frontier retention is ablated separately: --prism-population-cap 1 (single
+# incumbent) or 10, under --acceptance holdout_pareto (where the cap binds).
+#
+# Run with:
+#   python -m agent_harness_optimizer.cli --benchmark bfcl --optimizer prism \
+#     --prism-no-route \
+#     --inner-model <inner_model> --outer-model <outer_model> \
+#     --output-dir runs/bfcl-prism-noroute-s0 \
+#     --split-seed 0 \
+#     --train-cases 100 --holdout-cases 100 \
+#     --generations 10 --mutations-per-gen 3 \
+#     --wall-time-s 300 --max-steps 100 \
+#     --outer-max-turns 300
+
+benchmark: bfcl
+optimizer: prism
+
+# ABLATION FLAG (pick exactly one per run):
+#   --prism-no-route | --prism-no-gate | --prism-no-matrix |
+#   --prism-no-constraint | --prism-no-crossover
+ablation_flag: "--prism-no-route"  # CHANGE THIS per ablation run
+
+inner_model: "openai/gpt-5.4-mini"
+outer_model: "anthropic/claude-opus-4-7"
+
+# Evaluation budget per case
+wall_time_s: 300
+max_steps: 100
+max_tokens: 500000
+
+# PRISM hyperparameters (paper settings)
+generations: 10
+mutations_per_gen: 3
+train_cases: 100
+holdout_cases: 100
+seed: 42
+
+# Cross-validation fold (0-3 for 4-fold CV; run all 4 seeds to reproduce paper results)
+split_seed: 0  # change to 1, 2, 3 for other folds
+
+outer_max_turns: 300
+acceptance: holdout_pass_rate
+
+repeat_id: 0
+search_seed: 0
+
+# Notes:
+# - Same protocol, budget, and splits as bfcl_prism_main.yaml — only
+#   prism_ablation differs.
+# - All optimizers in a fold share --shared-baseline-dir for fair comparison
+# - search_seed / repeat_id are LABELS only — they do not set LLM sampling seeds.

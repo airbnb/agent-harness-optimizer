@@ -1,0 +1,38 @@
+# BFCL BetterHarness main experiment configuration
+# Paper: "Beyond Prompts: Measuring and Optimizing LLM Tool-Agent Harnesses"
+# Run with:
+#   python -m agent_harness_optimizer.cli --benchmark bfcl --optimizer better-harness \
+#     --inner-model <inner_model> --outer-model <outer_model> \
+#     --output-dir runs/bfcl-bh-s0 \
+#     --split-seed 0 \
+#     --train-cases 100 --holdout-cases 100 \
+#     --max-iterations 10 \
+#     --wall-time-s 300 --max-steps 100
+
+benchmark: bfcl
+optimizer: better-harness
+
+# Model placeholders — replace with your provider's model strings (litellm format)
+inner_model: "openai/gpt-5.4-mini"
+outer_model: "anthropic/claude-opus-4-7"
+
+# Evaluation budget per case
+wall_time_s: 300
+max_steps: 100
+max_tokens: 500000
+
+# BetterHarness hyperparameters (paper settings)
+max_iterations: 10
+train_cases: 100
+holdout_cases: 100
+seed: 42
+
+# Cross-validation fold (0-3)
+split_seed: 0
+
+# Outer agent settings
+outer_max_turns: 300
+acceptance: holdout_pass_rate
+
+repeat_id: 0
+search_seed: 0

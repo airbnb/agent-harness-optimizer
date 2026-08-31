@@ -1,0 +1,32 @@
+# BFCL GEPA main experiment configuration
+# Paper: "Beyond Prompts: Measuring and Optimizing LLM Tool-Agent Harnesses"
+# Requires: pip install gepa   (GEPA library)
+# Run with:
+#   python -m agent_harness_optimizer.cli --benchmark bfcl --optimizer gepa \
+#     --inner-model <inner_model> --outer-model <outer_model> \
+#     --output-dir runs/bfcl-gepa-s0 \
+#     --split-seed 0 \
+#     --train-cases 100 --holdout-cases 100 \
+#     --gepa-max-metric-calls 200 \
+#     --wall-time-s 300 --max-steps 100
+
+benchmark: bfcl
+optimizer: gepa
+
+inner_model: "openai/gpt-5.4-mini"
+outer_model: "anthropic/claude-opus-4-7"
+
+wall_time_s: 300
+max_steps: 100
+max_tokens: 500000
+
+# GEPA hyperparameters (paper settings)
+gepa_max_metric_calls: 800
+gepa_reflection_minibatch_size: 50
+train_cases: 100
+holdout_cases: 100
+seed: 42
+
+split_seed: 0
+repeat_id: 0
+search_seed: 0
