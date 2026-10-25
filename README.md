@@ -85,9 +85,14 @@ python -m agent_harness_optimizer.cli \
     --train-cases 20 --holdout-cases 20 \
     --wall-time-s 600 --max-steps 200
 
-# Resume a crashed run
+# Resume a crashed PRISM run (repeat the original arguments and add --resume)
 python -m agent_harness_optimizer.cli ... --resume
 ```
+
+`--resume` is supported only by PRISM. It skips incomplete checkpoints in
+`--output-dir` and reruns work after the last complete generation. If published
+checkpoints exist but none can be loaded, it raises an error rather than silently
+starting over. Use a new output directory for a fresh run.
 
 ---
 
@@ -118,7 +123,7 @@ python -m agent_harness_optimizer.cli ... --resume
 | `--max-tokens N` | 500000 | Per-case token budget |
 | `--split-seed N` | — | Enables deterministic train/holdout/scorecard split + final scorecard eval |
 | `--scorecard-trials k` | 1 | Run final scorecard k times; case passes only if it passes all k (pass^k, tau only) |
-| `--resume` | false | Resume from last checkpoint |
+| `--resume` | false | Resume PRISM from the latest complete checkpoint |
 | `--human-approval` | false | Pause for human review before accepting each change |
 
 ### PRISM

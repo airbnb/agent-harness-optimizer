@@ -226,32 +226,57 @@ class PRISMOptimizer(Optimizer):
     ) -> None:
         d = self.config.output_dir / f"gen-{gen:03d}"
         d.mkdir(parents=True, exist_ok=True)
-        (d / "frontier.json").write_text(json.dumps([c.to_dict() for c in frontier], indent=2))
+        # frontier.json is the completion marker. Stage it on the same filesystem
+        # and publish it only after every checkpoint file has been written. When
+        # replaying a broken generation, invalidate its old marker first.
+        frontier_path = d / "frontier.json"
+        staged_frontier = d / ".frontier.json.tmp"
+        if frontier_path.exists():
+            frontier_path.replace(staged_frontier)
+        staged_frontier.write_text(json.dumps([c.to_dict() for c in frontier], indent=2))
         (d / "all_candidates.json").write_text(
             json.dumps([c.to_dict() for c in all_candidates], indent=2)
         )
         (d / "screen_rollouts.json").write_text(json.dumps({"screen_rollouts": screen_rollouts}))
         if gen_stats is not None:
             (d / "gen_stats.json").write_text(json.dumps(gen_stats, indent=2))
+        staged_frontier.replace(frontier_path)
 
     def _load_state(self) -> tuple[int, list[Candidate], list[Candidate], int]:
         gen_dirs = sorted(self.config.output_dir.glob("gen-*"))
-        # Find the latest gen dir that has a complete frontier.json (guards against
-        # interrupted runs that created the dir but didn't finish writing).
-        last = next((d for d in reversed(gen_dirs) if (d / "frontier.json").exists()), None)
-        if last is None:
-            return -1, [], [], 0
-        frontier = [
-            Candidate.from_dict(d) for d in json.loads((last / "frontier.json").read_text())
-        ]
-        all_cands = [
-            Candidate.from_dict(d) for d in json.loads((last / "all_candidates.json").read_text())
-        ]
-        sr_path = last / "screen_rollouts.json"
-        screen_rollouts = (
-            json.loads(sr_path.read_text())["screen_rollouts"] if sr_path.exists() else 0
-        )
-        return int(last.name.split("-")[1]), frontier, all_cands, screen_rollouts
+        last_error: Exception | None = None
+        for directory in reversed(gen_dirs):
+            if not (directory / "frontier.json").exists():
+                continue  # Evaluation started, but no checkpoint was published.
+            try:
+                frontier_data = json.loads((directory / "frontier.json").read_text())
+                candidates_data = json.loads((directory / "all_candidates.json").read_text())
+                for name, rows in (
+                    ("frontier", frontier_data),
+                    ("all_candidates", candidates_data),
+                ):
+                    if not isinstance(rows, list) or not rows:
+                        raise ValueError(f"{name} must be a non-empty candidate list")
+                frontier = [Candidate.from_dict(row) for row in frontier_data]
+                all_cands = [Candidate.from_dict(row) for row in candidates_data]
+                sr_path = directory / "screen_rollouts.json"
+                # Older checkpoints did not persist screening costs.
+                screen_rollouts = (
+                    json.loads(sr_path.read_text())["screen_rollouts"] if sr_path.exists() else 0
+                )
+            except (FileNotFoundError, ValueError, KeyError, TypeError) as exc:
+                # Missing/truncated files can survive an interrupted save. Do not
+                # hide permission errors or other unexpected filesystem failures.
+                print(f"[prism] Skipping incomplete checkpoint {directory}: {exc}")
+                last_error = exc
+                continue
+            return int(directory.name.split("-")[1]), frontier, all_cands, screen_rollouts
+
+        if last_error is not None:
+            raise ValueError(
+                f"No complete PRISM checkpoint found in {self.config.output_dir}"
+            ) from last_error
+        return -1, [], [], 0
 
     def _save_report(
         self,
